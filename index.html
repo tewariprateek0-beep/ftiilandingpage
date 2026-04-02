@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FTII — Film & Television Institute of India</title>
+  <meta name="description" content="Where Legends are Made. Stories are Told." />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- React 18 + ReactDOM UMD -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone (for JSX in browser) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: '#FFB800',
+            charcoal: '#1A1A1A',
+            ink: '#0F0F0F',
+          },
+          fontFamily: {
+            playfair: ['"Playfair Display"', 'serif'],
+            mono: ['"Space Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ── Reset & Base ───────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: #1A1A1A;
+      color: #F8F8F8;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0F0F0F; }
+    ::-webkit-scrollbar-thumb { background: #FFB800; border-radius: 4px; }
+
+    /* ── Scroll Animation ───────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(44px);
+      transition: opacity 0.95s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.95s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left {
+      opacity: 0; transform: translateX(-40px);
+      transition: opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right {
+      opacity: 0; transform: translateX(40px);
+      transition: opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+    /* ── Stagger ────────────────────────────────── */
+    .stagger-1 { transition-delay: 0.05s; }
+    .stagger-2 { transition-delay: 0.12s; }
+    .stagger-3 { transition-delay: 0.20s; }
+    .stagger-4 { transition-delay: 0.28s; }
+
+    /* ── Grain ──────────────────────────────────── */
+    .grain { position: relative; }
+    .grain::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+      background-size: 400px;
+      pointer-events: none;
+      z-index: 2; opacity: 0.4; mix-blend-mode: overlay;
+    }
+
+    /* ── Film Strip ─────────────────────────────── */
+    .film-strip { background: #0A0A0A; padding: 4px 0; overflow: hidden; }
+    .sprocket-row { display: flex; gap: 18px; padding: 3px 16px; align-items: center; }
+    .sprocket {
+      width: 16px; height: 11px; flex-shrink: 0;
+      border: 1.5px solid rgba(255,184,0,0.3); border-radius: 2px; background: #0A0A0A;
+    }
+
+    /* ── Nav ────────────────────────────────────── */
+    .nav-solid {
+      background: rgba(12,12,12,0.92);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,184,0,0.12);
+    }
+
+    /* ── Gold shimmer ───────────────────────────── */
+    .gold-text {
+      background: linear-gradient(90deg,#FFB800 0%,#FFCC4D 40%,#FFB800 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer { to { background-position: 200% center; } }
+
+    /* ── Ticker ─────────────────────────────────── */
+    .ticker-wrap { overflow: hidden; white-space: nowrap; }
+    .ticker-inner { display: inline-flex; animation: tick 35s linear infinite; }
+    @keyframes tick { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* ── Dept Cards ─────────────────────────────── */
+    .dept-card {
+      transition: transform 0.45s cubic-bezier(0.22,1,0.36,1),
+                  box-shadow 0.45s cubic-bezier(0.22,1,0.36,1);
+    }
+    .dept-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 60px rgba(255,184,0,0.15), 0 0 0 1px rgba(255,184,0,0.3);
+    }
+    .dept-card .card-reveal {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 0.55s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease;
+    }
+    .dept-card:hover .card-reveal { max-height: 220px; opacity: 1; }
+    .dept-card img { transition: transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+    .dept-card:hover img { transform: scale(1.07); }
+    .dept-card .border-glow {
+      border: 1px solid transparent;
+      transition: border-color 0.4s ease;
+    }
+    .dept-card:hover .border-glow { border-color: rgba(255,184,0,0.3); }
+
+    /* ── Forms ──────────────────────────────────── */
+    .form-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,184,0,0.18);
+      color: #F8F8F8;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #FFB800;
+      box-shadow: 0 0 0 3px rgba(255,184,0,0.12);
+    }
+    .form-input::placeholder { color: rgba(248,248,248,0.3); }
+
+    /* ── WhatsApp ───────────────────────────────── */
+    @keyframes waPulse {
+      0% { transform: scale(1); opacity: 0.55; }
+      100% { transform: scale(1.75); opacity: 0; }
+    }
+    .wa-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%; background: #25D366;
+      animation: waPulse 2.5s ease-out infinite;
+    }
+
+    /* ── Carousel ───────────────────────────────── */
+    .carousel-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,184,0,0.25);
+      transition: all 0.3s ease; cursor: pointer;
+    }
+    .carousel-dot.active { background: #FFB800; width: 24px; border-radius: 4px; }
+
+    /* ── Scroll-in for hero (no IntersectionObserver needed) ── */
+    @keyframes heroUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-line-1 { animation: heroUp 1.1s 0.2s cubic-bezier(0.22,1,0.36,1) both; }
+    .hero-line-2 { animation: heroUp 1.1s 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+    .hero-line-3 { animation: heroUp 1.0s 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+    .hero-line-4 { animation: heroUp 0.9s 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+    .hero-line-5 { animation: heroUp 0.9s 1.1s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes scrollBob {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(9px); }
+    }
+    .scroll-bob { animation: scrollBob 1.9s ease-in-out infinite; }
+
+    /* ── Campus Tabs ─────────────────────────────── */
+    .tab-btn {
+      padding-bottom: 16px; font-size: 0.875rem; font-weight: 600;
+      border-bottom: 2px solid transparent;
+      color: rgba(248,248,248,0.45);
+      transition: color 0.25s, border-color 0.25s; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab-btn.active { color: #FFB800; border-bottom-color: #FFB800; }
+
+    /* ── Slide Transitions ──────────────────────── */
+    .slide-enter { animation: slideIn 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Mobile sticky ──────────────────────────── */
+    @media (min-width: 768px) { .mobile-only { display: none !important; } }
+
+    /* ── Section label ──────────────────────────── */
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.25em;
+      text-transform: uppercase; color: #FFB800; margin-bottom: 16px;
+    }
+
+    /* ── Float animation ────────────────────────── */
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .wa-float { animation: float 3.5s ease-in-out infinite; }
+
+    /* ── Fade in page ────────────────────────────── */
+    @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+    #root { animation: pageIn 0.6s ease forwards; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════
+
+const DEPARTMENTS = [
+  {
+    title: 'Film Wing',
+    tagline: 'Direction · Cinematography · Editing',
+    desc: "India's premier film training ground. Master storytelling through the full spectrum of cinematic craft.",
+    image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&q=80',
+    icon: '🎬',
+    tag: 'FLAGSHIP PROGRAM',
+    programs: ['Film Direction', 'Cinematography', 'Sound Design', 'Art Direction', 'Editing', 'Screenplay'],
+    duration: '3 Years',
+  },
+  {
+    title: 'Television Wing',
+    tagline: 'Production · Direction · Broadcast',
+    desc: 'Shape the future of broadcast and digital media. From live news to documentary — master the art of visual storytelling.',
+    image: 'https://images.unsplash.com/photo-1478720568477-152d9b5da27c?w=600&q=80',
+    icon: '📺',
+    tag: 'BROADCAST & DIGITAL',
+    programs: ['TV Direction', 'Video Editing', 'Electronic Camera', 'TV Anchoring', 'Scriptwriting'],
+    duration: '2 Years',
+  },
+  {
+    title: 'Short-Term Courses',
+    tagline: 'Intensive · Focused · Professional',
+    desc: 'Immersive workshops for working professionals. Sharpen craft skills without a long-term commitment.',
+    image: 'https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?w=600&q=80',
+    icon: '⚡',
+    tag: 'OPEN ENROLLMENT',
+    programs: ['Cinematography Intensive', 'Digital Editing', 'Documentary Making', 'Acting for Camera', 'Film Appreciation'],
+    duration: '2–12 Weeks',
+  },
+  {
+    title: 'International Exchange',
+    tagline: 'Global · Collaborative · Transformative',
+    desc: "Exchange programs with the world's finest film schools. Bring global perspectives to Indian storytelling.",
+    image: 'https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=600&q=80',
+    icon: '🌍',
+    tag: 'GLOBAL PARTNERSHIPS',
+    programs: ['La Fémis, France', 'DFFB Germany', 'Beijing Film Academy', 'AFI USA', 'NFTS UK'],
+    duration: '6 Months',
+  },
+];
+
+const ALUMNI = [
+  {
+    name: 'Rajkumar Hirani',
+    role: 'Director',
+    credits: '3 Idiots · PK · Munna Bhai M.B.B.S.',
+    quote: 'FTII did not just teach me filmmaking — it gave me the language to tell stories that matter. Every frame I shoot carries the spirit of Pune.',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
+    batch: 'Batch of 1990',
+    dept: 'Editing',
+    award: '4× National Award Winner',
+  },
+  {
+    name: 'Resul Pookutty',
+    role: 'Sound Designer',
+    credits: 'Slumdog Millionaire · RRR · Life of Pi',
+    quote: "The Wisdom Tree at FTII whispers lessons that no classroom can. I found my voice in the silence of that sacred campus.",
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
+    batch: 'Batch of 1999',
+    dept: 'Sound Design',
+    award: 'Academy Award Winner',
+  },
+  {
+    name: 'Aditi Sharma',
+    role: 'Documentary Director',
+    credits: 'Cannes · Sundance · IDFA Selection',
+    quote: "FTII's rigor shaped my eye and my soul. There is no other institution in the world that breeds this kind of fearless artistry.",
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
+    batch: 'Batch of 2008',
+    dept: 'Film Direction',
+    award: 'BAFTA Nominated',
+  },
+];
+
+const STATS = [
+  { value: 60, suffix: '+', label: 'Years of Excellence', sub: 'Est. 1960, Pune' },
+  { value: 20, suffix: '+', label: 'National Awards', sub: 'Annually' },
+  { value: 5000, suffix: '+', label: 'Alumni Worldwide', sub: 'In global cinema' },
+  { value: 14, suffix: '', label: 'Film Disciplines', sub: 'Across all wings' },
+];
+
+const TICKER_ITEMS = [
+  'JET 2026 Applications Open',
+  'Admission Deadline: March 31, 2026',
+  'New: Sikkim Extension Center',
+  '60+ Years of Cinematic Excellence',
+  'Oscar Winners · National Award Recipients · Cannes Selects',
+  'Short-Term Courses: Rolling Enrollment',
+];
+
+const CAMPUS = {
+  pune: {
+    label: 'Pune Main Campus',
+    subtitle: 'Est. 1960 — The Cradle of Indian Cinema',
+    image: 'https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80',
+    desc: "Spread across 20 lush acres in the cultural heart of Pune, the FTII campus is living heritage. Home to the legendary Wisdom Tree — a sacred banyan under which India's greatest filmmakers have dreamed, debated, and created.",
+    highlights: [
+      { icon: '🌳', label: 'The Wisdom Tree', desc: 'Sacred banyan where legends found inspiration' },
+      { icon: '🎭', label: '7 Production Studios', desc: 'Including the iconic Studio 2' },
+      { icon: '📽️', label: 'Film Archive', desc: '12,000+ films at NFAI' },
+      { icon: '🏛️', label: 'Heritage Campus', desc: 'Colonial architecture meets modern craft' },
+    ],
+  },
+  sikkim: {
+    label: 'Sikkim Extension Center',
+    subtitle: 'Est. 2018 — Where Mountains Meet Cinema',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80',
+    desc: "Nestled in the breathtaking landscapes of the Eastern Himalayas, FTII's Sikkim center provides a rare environment for documentary filmmakers and nature cinematographers to tell the untold stories of Northeast India.",
+    highlights: [
+      { icon: '🏔️', label: 'Himalayan Setting', desc: 'Unparalleled natural backdrops' },
+      { icon: '🎥', label: 'Documentary Focus', desc: 'Specialized in non-fiction filmmaking' },
+      { icon: '🌿', label: 'Eco Campus', desc: 'Integrated with natural surroundings' },
+      { icon: '🤝', label: 'Community Stories', desc: 'Northeast Indian narratives & traditions' },
+    ],
+  },
+};
+
+const NAV_LINKS = [
+  { label: 'Courses', href: '#courses' },
+  { label: 'Alumni', href: '#alumni' },
+  { label: 'Campus', href: '#campus' },
+  { label: 'JET Exam', href: '#admissions' },
+];
+
+// ════════════════════════════════════════════════
+// HOOKS
+// ════════════════════════════════════════════════
+
+function useScrolled(threshold = 70) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, [threshold]);
+  return scrolled;
+}
+
+function useReveal() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); obs.disconnect(); } },
+      { threshold: 0.12 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return ref;
+}
+
+function useCounter(end, duration = 2300) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        let startTime = null;
+        const raf = (ts) => {
+          if (!startTime) startTime = ts;
+          const progress = Math.min((ts - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 4);
+          setCount(Math.floor(eased * end));
+          if (progress < 1) requestAnimationFrame(raf);
+        };
+        requestAnimationFrame(raf);
+        obs.disconnect();
+      }
+    }, { threshold: 0.2 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [end, duration]);
+  return [count, ref];
+}
+
+// ════════════════════════════════════════════════
+// SHARED COMPONENTS
+// ════════════════════════════════════════════════
+
+function FilmStrip() {
+  return (
+    <div className="film-strip">
+      <div className="sprocket-row">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div key={i} className="sprocket" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GoldRule() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+      <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, transparent, rgba(255,184,0,0.5))' }} />
+      <div style={{ width: 6, height: 6, background: '#FFB800', transform: 'rotate(45deg)', flexShrink: 0 }} />
+      <div style={{ height: 1, flex: 1, background: 'linear-gradient(to left, transparent, rgba(255,184,0,0.5))' }} />
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════
+// NAVBAR
+// ════════════════════════════════════════════════
+
+function Navbar() {
+  const scrolled = useScrolled();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const LogoSVG = () => (
+    <svg viewBox="0 0 36 36" fill="none" style={{ width: 20, height: 20 }}>
+      <rect x="2" y="8" width="32" height="20" rx="2" fill="#1A1A1A" />
+      <circle cx="6" cy="12" r="2" fill="#FFB800" />
+      <circle cx="6" cy="24" r="2" fill="#FFB800" />
+      <circle cx="30" cy="12" r="2" fill="#FFB800" />
+      <circle cx="30" cy="24" r="2" fill="#FFB800" />
+      <circle cx="18" cy="18" r="5" fill="#FFB800" opacity="0.55" />
+      <circle cx="18" cy="18" r="2" fill="#FFB800" />
+    </svg>
+  );
+
+  return (
+    <header
+      className="hero-line-1"
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        transition: 'background 0.5s ease, border-color 0.5s ease',
+        background: scrolled ? 'rgba(12,12,12,0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(24px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,184,0,0.12)' : '1px solid transparent',
+      }}
+    >
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 72 }}>
+          {/* Logo */}
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+            <div style={{ width: 36, height: 36, background: '#FFB800', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+              <LogoSVG />
+            </div>
+            <div>
+              <div style={{ fontFamily: '"Playfair Display", serif', color: '#F8F8F8', fontWeight: 700, fontSize: 18, lineHeight: 1 }}>FTII</div>
+              <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: 'rgba(255,184,0,0.8)', letterSpacing: '0.25em', lineHeight: 1, marginTop: 3 }}>PUNE · EST. 1960</div>
+            </div>
+          </a>
+
+          {/* Desktop Links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="hidden md:flex">
+            {NAV_LINKS.map(({ label, href }) => (
+              <a key={label} href={href} style={{ color: 'rgba(248,248,248,0.65)', textDecoration: 'none', fontSize: 14, fontWeight: 500, letterSpacing: '0.02em', transition: 'color 0.2s' }}
+                onMouseOver={e => e.target.style.color='#FFB800'} onMouseOut={e => e.target.style.color='rgba(248,248,248,0.65)'}>
+                {label}
+              </a>
+            ))}
+            <a href="#admissions"
+              style={{ padding: '10px 20px', background: '#FFB800', color: '#1A1A1A', fontWeight: 600, fontSize: 14, textDecoration: 'none', borderRadius: 2, transition: 'background 0.2s' }}
+              onMouseOver={e => e.target.style.background='#FFCC4D'} onMouseOut={e => e.target.style.background='#FFB800'}>
+              Apply 2026
+            </a>
+          </nav>
+
+          {/* Hamburger */}
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, display: 'flex', flexDirection: 'column', gap: 5 }} className="md:hidden">
+            {[0,1,2].map(i => (
+              <span key={i} style={{
+                display: 'block', width: 24, height: 2, background: '#F8F8F8',
+                borderRadius: 2, transition: 'transform 0.25s, opacity 0.25s',
+                transform: menuOpen && i===0 ? 'rotate(45deg) translate(5px, 5px)' : menuOpen && i===2 ? 'rotate(-45deg) translate(5px, -5px)' : 'none',
+                opacity: menuOpen && i===1 ? 0 : 1,
+              }} />
+            ))}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div style={{ background: 'rgba(12,12,12,0.96)', borderTop: '1px solid rgba(255,184,0,0.1)' }} className="md:hidden">
+          <div style={{ padding: '12px 20px 16px' }}>
+            {NAV_LINKS.map(({ label, href }) => (
+              <a key={label} href={href} onClick={() => setMenuOpen(false)}
+                style={{ display: 'block', padding: '12px 0', color: 'rgba(248,248,248,0.7)', textDecoration: 'none', fontSize: 14, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                {label}
+              </a>
+            ))}
+            <a href="#admissions" onClick={() => setMenuOpen(false)}
+              style={{ display: 'block', marginTop: 12, padding: 12, background: '#FFB800', color: '#1A1A1A', textAlign: 'center', fontWeight: 600, fontSize: 14, textDecoration: 'none', borderRadius: 2 }}>
+              Apply for 2026 Admissions
+            </a>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
+
+// ════════════════════════════════════════════════
+// TICKER
+// ════════════════════════════════════════════════
+
+function Ticker() {
+  const items = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
+  return (
+    <div style={{ background: '#FFB800', padding: '8px 0', overflow: 'hidden' }}>
+      <div className="ticker-wrap">
+        <div className="ticker-inner">
+          {items.map((item, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 16, padding: '0 24px', color: '#1A1A1A', fontSize: 11, fontWeight: 600, fontFamily: '"Space Mono", monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              {item}
+              <span style={{ display: 'inline-block', width: 5, height: 5, background: 'rgba(26,26,26,0.35)', borderRadius: '50%' }} />
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════
+// HERO
+// ════════════════════════════════════════════════
+
+function Hero() {
+  return (
+    <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className="grain">
+      {/* Background */}
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920&q=80"
+          alt="Cinematic hero"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.6) 45%, rgba(10,10,10,0.97) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(10,10,10,0.55) 0%, transparent 60%)' }} />
+      </div>
+
+      {/* Top film strip */}
+      <div style={{ position: 'relative', zIndex: 10, paddingTop: 72 }}>
+        <FilmStrip />
+      </div>
+
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'center' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 20px', width: '100%' }}>
+          <div style={{ maxWidth: 760 }}>
+
+            {/* Pre-headline */}
+            <div className="hero-line-1" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+              <div style={{ width: 44, height: 1, background: '#FFB800' }} />
+              <span style={{ fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#FFB800' }}>
+                Film &amp; Television Institute of India
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="hero-line-2" style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(48px, 8vw, 90px)', fontWeight: 900, lineHeight: 1.05, color: '#F8F8F8', marginBottom: 24 }}>
+              Where Legends{' '}
+              <em style={{ color: '#FFB800', fontStyle: 'italic' }}>are Made.</em>
+              <br />
+              Stories are{' '}
+              <em style={{ fontStyle: 'italic' }}>Told.</em>
+            </h1>
+
+            <p className="hero-line-3" style={{ color: 'rgba(248,248,248,0.6)', fontSize: 18, lineHeight: 1.75, maxWidth: 580, marginBottom: 16 }}>
+              Established in 1960 under the Ministry of Information &amp; Broadcasting, FTII Pune has shaped the finest minds in Indian and world cinema — from Oscar winners to National Award laureates.
+            </p>
+
+            {/* Gold accent bar */}
+            <div className="hero-line-3" style={{ width: 80, height: 2, background: '#FFB800', marginBottom: 36 }} />
+
+            {/* CTAs */}
+            <div className="hero-line-4" style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+              <a href="#admissions"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '14px 28px', background: '#FFB800', color: '#1A1A1A', fontWeight: 600, fontSize: 14, textDecoration: 'none', borderRadius: 2, transition: 'all 0.2s', boxShadow: '0 0 0 rgba(255,184,0,0)' }}
+                onMouseOver={e => { e.currentTarget.style.background='#FFCC4D'; e.currentTarget.style.boxShadow='0 0 30px rgba(255,184,0,0.45)'; }}
+                onMouseOut={e => { e.currentTarget.style.background='#FFB800'; e.currentTarget.style.boxShadow='0 0 0 rgba(255,184,0,0)'; }}>
+                Apply for 2026 Admissions →
+              </a>
+              <a href="#courses"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '14px 28px', border: '1px solid rgba(255,184,0,0.45)', color: '#F8F8F8', fontWeight: 500, fontSize: 14, textDecoration: 'none', borderRadius: 2, transition: 'all 0.2s' }}
+                onMouseOver={e => { e.currentTarget.style.borderColor='#FFB800'; e.currentTarget.style.color='#FFB800'; }}
+                onMouseOut={e => { e.currentTarget.style.borderColor='rgba(255,184,0,0.45)'; e.currentTarget.style.color='#F8F8F8'; }}>
+                Explore Film Courses
+              </a>
+              <a href="#alumni"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 20px', color: 'rgba(248,248,248,0.6)', fontSize: 14, textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.color='#FFB800'} onMouseOut={e => e.currentTarget.style.color='rgba(248,248,248,0.6)'}>
+                ▶ Watch Student Showreels
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="hero-line-5" style={{ position: 'relative', zIndex: 10, paddingBottom: 28, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(248,248,248,0.25)' }}>Scroll</span>
+          <div className="scroll-bob" style={{ color: 'rgba(255,184,0,0.45)' }}>▼</div>
+        </div>
+      </div>
+
+      {/* Bottom film strip */}
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        <FilmStrip />
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════
+// LEGACY BAR
+// ════════════════════════════════════════════════
+
+function StatItem({ value, suffix, label, sub }) {
+  const [count, ref] = useCounter(value);
+  return (
+    <div ref={ref} style={{ textAlign: 'center', padding: '32px 24px', borderRight: '1px solid rgba(255,184,0,0.08)' }}>
+      <div className="gold-text" style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(42px, 5vw, 58px)', fontWeight: 900, lineHeight: 1, marginBottom: 8 }}>
+        {count.toLocaleString()}{suffix}
+      </div>
+      <div style={{ color: '#F8F8F8', fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{label}</div>
+      <div style={{ color: 'rgba(248,248,248,0.35)', fontSize: 11, fontFamily: '"Space Mono", monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{sub}</div>
+    </div>
+  );
+}
+
+function LegacyBar() {
+  const ref = useReveal();
+  return (
+    <section style={{ background: '#111111', position: 'relative', overflow: 'hidden' }}>
+      <div style={{
+        position: 'absolute', inset: 0, opacity: 0.04,
+        backgroundImage: 'repeating-linear-gradient(45deg, #FFB800 0px, #FFB800 1px, transparent 1px, transparent 14px)'
+      }} />
+      <div ref={ref} className="reveal" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0 }} className="lg:grid-cols-4" id="stats-grid">
+          {STATS.map((s, i) => (
+            <StatItem key={i} {...s} />
+          ))}
+        </div>
+      </div>
+      <FilmStrip />
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════
+// DEPARTMENTS
+// ════════════════════════════════════════════════
+
+function DeptCard({ dept, delay }) {
+  const ref = useReveal();
+  return (
+    <div ref={ref} className={`reveal dept-card stagger-${delay}`} style={{ borderRadius: 2, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
+      <div style={{ aspectRatio: '3/4', position: 'relative', overflow: 'hidden' }}>
+        <img src={dept.image} alt={dept.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0F0F0F 0%, rgba(15,15,15,0.5) 45%, transparent 100%)' }} />
+
+        {/* Tag */}
+        <div style={{ position: 'absolute', top: 16, left: 16 }}>
+          <span style={{ padding: '4px 10px', background: '#FFB800', color: '#1A1A1A', fontSize: 9, fontFamily: '"Space Mono", monospace', fontWeight: 700, letterSpacing: '0.2em' }}>
+            {dept.tag}
+          </span>
+        </div>
+
+        {/* Content */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24 }}>
+          <div style={{ fontSize: 26, marginBottom: 12 }}>{dept.icon}</div>
+          <div style={{ color: 'rgba(255,184,0,0.75)', fontSize: 10, fontFamily: '"Space Mono", monospace', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 8 }}>{dept.tagline}</div>
+          <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: 22, color: '#F8F8F8', fontWeight: 700, marginBottom: 8, margin: '0 0 8px 0' }}>{dept.title}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(248,248,248,0.35)', fontSize: 11, marginBottom: 16 }}>
+            ⏱ {dept.duration}
+          </div>
+          <div className="card-reveal">
+            <p style={{ color: 'rgba(248,248,248,0.55)', fontSize: 13, lineHeight: 1.65, marginBottom: 16 }}>{dept.desc}</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {dept.programs.slice(0, 4).map(p => (
+                <li key={p} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#FFB800', fontSize: 12, fontFamily: '"Space Mono", monospace' }}>
+                  <span style={{ color: 'rgba(255,184,0,0.5)' }}>▸</span> {p}
+                </li>
+              ))}
+            </ul>
+            <span style={{ color: '#FFB800', fontSize: 12, fontWeight: 600 }}>View Program Details →</span>
+          </div>
+        </div>
+      </div>
+      {/* Gold border */}
+      <div className="border-glow" style={{ position: 'absolute', inset: 0, borderRadius: 2, pointerEvents: 'none' }} />
+    </div>
+  );
+}
+
+function ServicesGrid() {
+  const ref = useReveal();
+  return (
+    <section id="courses" style={{ background: '#1A1A1A', padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, width: 280, height: 280, background: 'rgba(255,184,0,0.03)', borderRadius: '50%', filter: 'blur(60px)' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, width: 320, height: 320, background: 'rgba(255,184,0,0.03)', borderRadius: '50%', filter: 'blur(60px)' }} />
+
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+        {/* Header */}
+        <div ref={ref} className="reveal" style={{ marginBottom: 56 }}>
+          <p className="section-label">Departments &amp; Programs</p>
+          <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(32px, 4vw, 48px)', color: '#F8F8F8', fontWeight: 700, lineHeight: 1.15, maxWidth: 500, margin: '0 0 16px 0' }}>
+            Choose Your{' '}
+            <em style={{ color: '#FFB800', fontStyle: 'italic' }}>Creative Path</em>
+          </h2>
+          <p style={{ color: 'rgba(248,248,248,0.45)', fontSize: 15, lineHeight: 1.7, maxWidth: 460 }}>
+            From narrative cinema to broadcast television — each discipline at FTII is guided by practitioners who have shaped the industry.
+          </p>
+        </div>
+
+        {/* Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20 }}>
+          {DEPARTMENTS.map((dept, i) => (
+            <DeptCard key={dept.title} dept={dept} delay={Math.min(i + 1, 4)} />
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div style={{ marginTop: 52, textAlign: 'center' }}>
+          <a href="#admissions" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 28px', border: '1px solid rgba(255,184,0,0.35)', color: '#FFB800', fontSize: 14, fontWeight: 500, textDecoration: 'none', borderRadius: 2, transition: 'background 0.2s' }}
+            onMouseOver={e => e.currentTarget.style.background='rgba(255,184,0,0.08)'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
+            View All Courses &amp; JET Syllabus →
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════
+// ALUMNI SPOTLIGHT
+// ════════════════════════════════════════════════
+
+function AlumniSpotlight() {
+  const [current, setCurrent] = useState(0);
+  const [key, setKey] = useState(0);
+  const ref = useReveal();
+
+  const go = useCallback((idx) => {
+    setCurrent(idx);
+    setKey(k => k + 1);
+  }, []);
+
+  const next = useCallback(() => {
+    go((current + 1) % ALUMNI.length);
+  }, [current, go]);
+
+  useEffect(() => {
+    const t = setInterval(next, 6000);
+    return () => clearInterval(t);
+  }, [next]);
+
+  const a = ALUMNI[current];
+
+  return (
+    <section id="alumni" style={{ background: '#0F0F0F', padding: '96px 0', position: 'relative', overflow: 'hidden' }} className="grain">
+      {/* Decorative quote */}
+      <div style={{ position: 'absolute', top: 0, left: 20, fontFamily: '"Playfair Display", serif', fontSize: 'clamp(120px, 20vw, 220px)', color: 'rgba(255,184,0,0.04)', lineHeight: 1, pointerEvents: 'none', userSelect: 'none', fontWeight: 900 }}>
+        "
+      </div>
+
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+        {/* Header */}
+        <div ref={ref} className="reveal" style={{ marginBottom: 60, display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24 }}>
+          <div>
+            <p className="section-label">Alumni Spotlight</p>
+            <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(32px, 4vw, 48px)', color: '#F8F8F8', fontWeight: 700, margin: 0 }}>
+              Voices From the{' '}
+              <em style={{ color: '#FFB800', fontStyle: 'italic' }}>Masters</em>
+            </h2>
+          </div>
+          <div style={{ color: 'rgba(248,248,248,0.35)', fontSize: 12, fontFamily: '"Space Mono", monospace', textAlign: 'right', lineHeight: 1.7 }}>
+            5,000+ alumni<br />shaping global cinema
+          </div>
+        </div>
+
+        {/* Carousel */}
+        <div key={key} className="slide-enter" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 48, alignItems: 'center', minHeight: 360 }}
+          id={`alumni-slide-${key}`}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 56, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Portrait */}
+            <div style={{ position: 'relative', width: 200, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: -10, left: -10, right: 10, bottom: 10, border: '1.5px solid rgba(255,184,0,0.18)', borderRadius: 2, zIndex: 0 }} />
+              <img src={a.image} alt={a.name}
+                style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 2, filter: 'grayscale(1)', position: 'relative', zIndex: 1, transition: 'filter 0.7s' }}
+                onMouseOver={e => e.target.style.filter='grayscale(0)'} onMouseOut={e => e.target.style.filter='grayscale(1)'} />
+              {/* Award badge */}
+              <div style={{ position: 'absolute', bottom: -12, right: -12, background: '#FFB800', color: '#1A1A1A', fontSize: 9, fontFamily: '"Space Mono", monospace', fontWeight: 700, padding: '6px 10px', letterSpacing: '0.12em', zIndex: 2 }}>
+                {a.award}
+              </div>
+            </div>
+
+            {/* Quote */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,184,0,0.55)', marginBottom: 20 }}>
+                {a.batch} · {a.dept}
+              </div>
+              <blockquote style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(18px, 2.5vw, 26px)', color: '#F8F8F8', fontStyle: 'italic', lineHeight: 1.55, margin: '0 0 24px 0' }}>
+                "{a.quote}"
+              </blockquote>
+              <GoldRule />
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, color: '#F8F8F8', fontWeight: 700 }}>{a.name}</div>
+                <div style={{ color: '#FFB800', fontSize: 14, marginTop: 4, fontWeight: 500 }}>{a.role}</div>
+                <div style={{ color: 'rgba(248,248,248,0.3)', fontSize: 12, marginTop: 4, fontFamily: '"Space Mono", monospace' }}>{a.credits}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div style={{ marginTop: 48, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {ALUMNI.map((_, i) => (
+              <button key={i} onClick={() => go(i)} className={`carousel-dot ${i === current ? 'active' : ''}`} style={{ border: 'none', cursor: 'pointer', padding: 0 }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginLeft: 16 }}>
+            <button onClick={() => go((current - 1 + ALUMNI.length) % ALUMNI.length)}
+              style={{ width: 40, height: 40, border: '1px solid rgba(255,184,0,0.2)', background: 'none', color: 'rgba(255,184,0,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', borderRadius: 2, fontSize: 16 }}
+              onMouseOver={e => { e.currentTarget.style.borderColor='#FFB800'; e.currentTarget.style.color='#FFB800'; }}
+              onMouseOut={e => { e.currentTarget.style.borderColor='rgba(255,184,0,0.2)'; e.currentTarget.style.color='rgba(255,184,0,0.5)'; }}>
+              ‹
+            </button>
+            <button onClick={next}
+              style={{ width: 40, height: 40, border: '1px solid rgba(255,184,0,0.2)', background: 'none', color: 'rgba(255,184,0,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', borderRadius: 2, fontSize: 16 }}
+              onMouseOver={e => { e.currentTarget.style.borderColor='#FFB800'; e.currentTarget.style.color='#FFB800'; }}
+              onMouseOut={e => { e.currentTarget.style.borderColor='rgba(255,184,0,0.2)'; e.currentTarget.style.color='rgba(255,184,0,0.5)'; }}>
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════
+// CAMPUS
+// ════════════════════════════════════════════════
+
+function CampusLocations() {
+  const [active, setActive] = useState('pune');
+  const [slideKey, setSlideKey] = useState(0);
+  const ref = useReveal();
+  const c = CAMPUS[active];
+
+  const switchTab = (key) => {
+    setActive(key);
+    setSlideKey(k => k + 1);
+  };
+
+  return (
+    <section id="campus" style={{ background: '#161616', padding: '96px 0', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+        {/* Header */}
+        <div ref={ref} className="reveal" style={{ marginBottom: 40 }}>
+          <p className="section-label">Our Campuses</p>
+          <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(32px, 4vw, 48px)', color: '#F8F8F8', fontWeight: 700, margin: 0 }}>
+            Spaces That{' '}
+            <em style={{ color: '#FFB800', fontStyle: 'italic' }}>Inspire</em>
+          </h2>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 32, borderBottom: '1px solid rgba(255,184,0,0.1)', marginBottom: 40 }}>
+          {Object.entries(CAMPUS).map(([key, val]) => (
+            <button key={key} onClick={() => switchTab(key)} className={`tab-btn ${active === key ? 'active' : ''}`}>
+              {val.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div key={slideKey} className="slide-enter" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 40, alignItems: 'start' }}>
+          {/* Image */}
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', top: -12, left: -12, right: 12, bottom: 12, border: '1px solid rgba(255,184,0,0.12)', borderRadius: 2, zIndex: 0 }} />
+            <img src={c.image} alt={c.label}
+              style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: 2, position: 'relative', zIndex: 1, display: 'block' }} />
+            <div style={{ position: 'absolute', bottom: 16, left: 16, background: 'rgba(26,26,26,0.9)', backdropFilter: 'blur(8px)', padding: '8px 14px', borderRadius: 2, borderLeft: '2px solid #FFB800', zIndex: 2 }}>
+              <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#FFB800', letterSpacing: '0.2em', textTransform: 'uppercase' }}>{c.label}</div>
+              <div style={{ color: 'rgba(248,248,248,0.5)', fontSize: 11 }}>{c.subtitle}</div>
+            </div>
+          </div>
+
+          {/* Details */}
+          <div>
+            <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: 22, color: '#F8F8F8', fontWeight: 700, marginBottom: 16 }}>{c.label}</h3>
+            <p style={{ color: 'rgba(248,248,248,0.5)', lineHeight: 1.75, fontSize: 15, marginBottom: 0 }}>{c.desc}</p>
+            <GoldRule />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {c.highlights.map(h => (
+                <div key={h.label}
+                  style={{ display: 'flex', gap: 12, padding: 16, background: '#1A1A1A', borderRadius: 2, border: '1px solid rgba(255,184,0,0.08)', transition: 'border-color 0.2s' }}
+                  onMouseOver={e => e.currentTarget.style.borderColor='rgba(255,184,0,0.25)'} onMouseOut={e => e.currentTarget.style.borderColor='rgba(255,184,0,0.08)'}>
+                  <div style={{ fontSize: 22, flexShrink: 0 }}>{h.icon}</div>
+                  <div>
+                    <div style={{ color: '#F8F8F8', fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{h.label}</div>
+                    <div style={{ color: 'rgba(248,248,248,0.38)', fontSize: 12, lineHeight: 1.5 }}>{h.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 24 }}>
+              <a href="#" style={{ color: '#FFB800', fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'gap 0.2s', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                onMouseOver={e => e.currentTarget.style.gap='16px'} onMouseOut={e => e.currentTarget.style.gap='8px'}>
+                Take a Virtual Tour →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════
+// LEAD CAPTURE
+// ════════════════════════════════════════════════
+
+function LeadCapture() {
+  const [form, setForm] = useState({ name:'', email:'', phone:'', dept:'', portfolio:'', message:'' });
+  const [submitted, setSubmitted] = useState(false);
+  const leftRef = useReveal();
+  const rightRef = useReveal();
+
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleSubmit = e => { e.preventDefault(); setSubmitted(true); };
+
+  const inputStyle = {
+    width: '100%', padding: '12px 16px', borderRadius: 2, fontSize: 14,
+    fontFamily: 'Inter, system-ui, sans-serif',
+  };
+
+  return (
+    <section id="admissions" style={{ background: '#1A1A1A', padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
+      {/* Vertical film strip left */}
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 28, display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 4px', overflow: 'hidden' }}>
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div key={i} style={{ width: '100%', height: 14, border: '1px solid rgba(255,184,0,0.12)', borderRadius: 1, flexShrink: 0 }} />
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px 0 52px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 64, alignItems: 'start' }}>
+
+          {/* Left */}
+          <div ref={leftRef} className="reveal-left">
+            <p className="section-label">Admissions 2026</p>
+            <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(30px, 3.5vw, 46px)', color: '#F8F8F8', fontWeight: 700, lineHeight: 1.15, marginBottom: 20 }}>
+              Begin Your{' '}
+              <em style={{ color: '#FFB800', fontStyle: 'italic' }}>Cinematic</em>{' '}
+              Journey
+            </h2>
+            <p style={{ color: 'rgba(248,248,248,0.5)', lineHeight: 1.75, fontSize: 15, marginBottom: 28 }}>
+              Admissions to FTII's diploma programs are conducted through the{' '}
+              <strong style={{ color: '#FFB800' }}>Joint Entrance Test (JET)</strong>.
+              Request the official prospectus for detailed syllabus, eligibility, and application guidance.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {[
+                { icon: '📅', title: 'JET 2026 Exam', desc: 'Applications open until March 31, 2026' },
+                { icon: '🎓', title: 'Eligibility', desc: 'Graduate in any discipline. Special provisions for SC/ST/OBC.' },
+                { icon: '📋', title: 'Selection', desc: 'Written test · Portfolio review · Personal interview' },
+                { icon: '🏛️', title: 'Ministry of I&B', desc: 'Government of India autonomous institution' },
+              ].map(item => (
+                <div key={item.title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{item.icon}</div>
+                  <div>
+                    <div style={{ color: '#F8F8F8', fontWeight: 600, fontSize: 14, marginBottom: 3 }}>{item.title}</div>
+                    <div style={{ color: 'rgba(248,248,248,0.4)', fontSize: 13 }}>{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Form */}
+          <div ref={rightRef} className="reveal-right">
+            <div style={{ background: '#111111', border: '1px solid rgba(255,184,0,0.12)', borderRadius: 2, padding: 32, position: 'relative' }}>
+              {/* Corner accents */}
+              <div style={{ position: 'absolute', top: 0, left: 0, width: 28, height: 28, borderTop: '2px solid #FFB800', borderLeft: '2px solid #FFB800' }} />
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderBottom: '2px solid #FFB800', borderRight: '2px solid #FFB800' }} />
+
+              <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, color: '#F8F8F8', fontWeight: 700, marginBottom: 6 }}>Request Prospectus</h3>
+              <p style={{ color: 'rgba(248,248,248,0.35)', fontSize: 13, marginBottom: 28 }}>We'll send the complete JET 2026 guide to your email.</p>
+
+              {submitted ? (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
+                  <div style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, color: '#FFB800', fontWeight: 700, marginBottom: 10 }}>Request Received!</div>
+                  <p style={{ color: 'rgba(248,248,248,0.5)', fontSize: 14 }}>Your JET 2026 prospectus is on its way. Check your inbox within 24 hours.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {[
+                      { name: 'name', label: 'FULL NAME *', type: 'text', placeholder: 'Your full name', required: true },
+                      { name: 'email', label: 'EMAIL *', type: 'email', placeholder: 'your@email.com', required: true },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label style={{ display: 'block', fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(248,248,248,0.45)', marginBottom: 6 }}>{f.label}</label>
+                        <input {...f} value={form[f.name]} onChange={handleChange} className="form-input" style={inputStyle} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(248,248,248,0.45)', marginBottom: 6 }}>DEPARTMENT OF INTEREST *</label>
+                    <select name="dept" value={form.dept} onChange={handleChange} required className="form-input" style={{ ...inputStyle, appearance: 'none', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,184,0,0.18)', color: form.dept ? '#F8F8F8' : 'rgba(248,248,248,0.3)' }}>
+                      <option value="" disabled>Select a department…</option>
+                      {['Film Direction','Cinematography','Editing','Sound Design','Art Direction','Screenplay Writing','TV Direction','Electronic Camera','TV Anchoring','Short-Term Courses'].map(d => (
+                        <option key={d} value={d.toLowerCase().replace(/\s+/g,'-')} style={{ background: '#1A1A1A' }}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(248,248,248,0.45)', marginBottom: 6 }}>PHONE NUMBER</label>
+                    <input type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+91 XXXXX XXXXX" className="form-input" style={inputStyle} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(248,248,248,0.45)', marginBottom: 6 }}>PREVIOUS CREATIVE WORK LINK</label>
+                    <input type="url" name="portfolio" value={form.portfolio} onChange={handleChange} placeholder="YouTube, Vimeo, portfolio URL…" className="form-input" style={inputStyle} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontFamily: '"Space Mono", monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(248,248,248,0.45)', marginBottom: 6 }}>MESSAGE (OPTIONAL)</label>
+                    <textarea name="message" value={form.message} onChange={handleChange} rows={3} placeholder="Tell us about your creative background…" className="form-input" style={{ ...inputStyle, resize: 'none' }} />
+                  </div>
+
+                  <button type="submit"
+                    style={{ width: '100%', padding: '14px', background: '#FFB800', color: '#1A1A1A', fontWeight: 600, fontSize: 14, border: 'none', borderRadius: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'all 0.2s' }}
+                    onMouseOver={e => { e.currentTarget.style.background='#FFCC4D'; e.currentTarget.style.boxShadow='0 0 25px rgba(255,184,0,0.35)'; }}
+                    onMouseOut={e => { e.currentTarget.style.background='#FFB800'; e.currentTarget.style.boxShadow='none'; }}>
+                    Send Me the JET 2026 Prospectus →
+                  </button>
+
+                  <p style={{ color: 'rgba(248,248,248,0.2)', fontSize: 11, textAlign: 'center', margin: 0 }}>
+                    By submitting, you agree to FTII's privacy policy. No spam, ever.
+                  </p>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════
+// FOOTER
+// ════════════════════════════════════════════════
+
+function Footer() {
+  return (
+    <footer style={{ background: '#0A0A0A', paddingBottom: 32 }}>
+      <FilmStrip />
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '60px 20px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 40, marginBottom: 56 }}>
+
+          {/* Brand */}
+          <div style={{ gridColumn: 'span 1' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 36, height: 36, background: '#FFB800', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, flexShrink: 0 }}>
+                <svg viewBox="0 0 36 36" fill="none" style={{ width: 20, height: 20 }}>
+                  <rect x="2" y="8" width="32" height="20" rx="2" fill="#1A1A1A" />
+                  <circle cx="6" cy="12" r="2" fill="#FFB800" />
+                  <circle cx="6" cy="24" r="2" fill="#FFB800" />
+                  <circle cx="30" cy="12" r="2" fill="#FFB800" />
+                  <circle cx="30" cy="24" r="2" fill="#FFB800" />
+                  <circle cx="18" cy="18" r="5" fill="#FFB800" opacity="0.55" />
+                  <circle cx="18" cy="18" r="2" fill="#FFB800" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontFamily: '"Playfair Display", serif', color: '#F8F8F8', fontWeight: 700, fontSize: 18, lineHeight: 1 }}>FTII</div>
+                <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: 'rgba(255,184,0,0.7)', letterSpacing: '0.25em', marginTop: 3 }}>PUNE · EST. 1960</div>
+              </div>
+            </div>
+            <p style={{ color: 'rgba(248,248,248,0.28)', fontSize: 12, lineHeight: 1.75, marginBottom: 20 }}>
+              An autonomous body under the Ministry of Information &amp; Broadcasting, Government of India.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {['Y','X','In','Fb'].map(s => (
+                <a key={s} href="#" style={{ width: 30, height: 30, border: '1px solid rgba(255,184,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(248,248,248,0.3)', fontSize: 11, fontFamily: '"Space Mono", monospace', textDecoration: 'none', borderRadius: 2, transition: 'all 0.2s' }}
+                  onMouseOver={e => { e.currentTarget.style.color='#FFB800'; e.currentTarget.style.borderColor='rgba(255,184,0,0.4)'; }}
+                  onMouseOut={e => { e.currentTarget.style.color='rgba(248,248,248,0.3)'; e.currentTarget.style.borderColor='rgba(255,184,0,0.15)'; }}>
+                  {s}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Programs */}
+          <div>
+            <div className="section-label">Programs</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {['Film Direction','Cinematography','Editing','Sound Design','Art Direction','Screenplay Writing','TV Production'].map(l => (
+                <li key={l}><a href="#courses" style={{ color: 'rgba(248,248,248,0.38)', fontSize: 13, textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseOver={e => e.target.style.color='#FFB800'} onMouseOut={e => e.target.style.color='rgba(248,248,248,0.38)'}>{l}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <div className="section-label">Quick Links</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {['JET Exam Info','Admissions FAQ','Syllabus Download','Ministry of I&B','Archive Access (NFAI)','Research & Publications','Campus Life'].map(l => (
+                <li key={l}><a href="#" style={{ color: 'rgba(248,248,248,0.38)', fontSize: 13, textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseOver={e => e.target.style.color='#FFB800'} onMouseOut={e => e.target.style.color='rgba(248,248,248,0.38)'}>{l}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <div className="section-label">Contact</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                { title: 'Pune Campus', lines: ['Law College Road, Pune – 411 004', 'Maharashtra, India'] },
+                { title: 'Admissions Office', lines: ['admissions@ftii.ac.in', '+91 (20) 2543-3011'] },
+                { title: 'JET Helpline', lines: ['jet@ftii.ac.in', 'Mon–Fri, 10AM–5PM IST'] },
+              ].map(c => (
+                <div key={c.title}>
+                  <div style={{ color: 'rgba(248,248,248,0.55)', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{c.title}</div>
+                  {c.lines.map(l => <div key={l} style={{ color: 'rgba(248,248,248,0.3)', fontSize: 12, lineHeight: 1.7 }}>{l}</div>)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,184,0,0.07)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <div style={{ color: 'rgba(248,248,248,0.18)', fontSize: 12, fontFamily: '"Space Mono", monospace' }}>
+            © 2026 Film &amp; Television Institute of India. All rights reserved.
+          </div>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            {['Privacy Policy','RTI','Disclaimer','Sitemap'].map(l => (
+              <a key={l} href="#" style={{ color: 'rgba(248,248,248,0.22)', fontSize: 12, textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseOver={e => e.target.style.color='#FFB800'} onMouseOut={e => e.target.style.color='rgba(248,248,248,0.22)'}>{l}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ════════════════════════════════════════════════
+// FLOATING ELEMENTS
+// ════════════════════════════════════════════════
+
+function FloatingElements() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVisible(true), 2200); return () => clearTimeout(t); }, []);
+
+  if (!visible) return null;
+
+  return (
+    <>
+      {/* WhatsApp */}
+      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 100 }}>
+        <a href="https://wa.me/919284000400?text=Hi!%20I%27m%20interested%20in%20FTII%20admissions%202026."
+          target="_blank" rel="noopener noreferrer"
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, background: '#25D366', borderRadius: '50%', textDecoration: 'none', boxShadow: '0 4px 20px rgba(37,211,102,0.35)' }}
+          className="wa-float"
+          title="Admissions Help on WhatsApp">
+          <div className="wa-ring" />
+          <svg viewBox="0 0 24 24" fill="white" style={{ width: 28, height: 28, position: 'relative', zIndex: 1 }}>
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          </svg>
+        </a>
+      </div>
+
+      {/* Mobile sticky CTA */}
+      <div className="mobile-only" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 99, background: 'rgba(12,12,12,0.95)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,184,0,0.18)', padding: '10px 16px', display: 'flex', gap: 10 }}>
+        <a href="#admissions" style={{ flex: 1, display: 'block', padding: '12px', background: '#FFB800', color: '#1A1A1A', fontWeight: 600, fontSize: 13, textAlign: 'center', textDecoration: 'none', borderRadius: 2 }}>
+          Download Application Guide
+        </a>
+        <a href="https://wa.me/919284000400" target="_blank" rel="noopener noreferrer"
+          style={{ width: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 2, textDecoration: 'none' }}>
+          <svg viewBox="0 0 24 24" fill="#25D366" style={{ width: 22, height: 22 }}>
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          </svg>
+        </a>
+      </div>
+    </>
+  );
+}
+
+// ════════════════════════════════════════════════
+// APP
+// ════════════════════════════════════════════════
+
+function App() {
+  return (
+    <div>
+      <Navbar />
+      <Ticker />
+      <Hero />
+      <LegacyBar />
+      <ServicesGrid />
+      <AlumniSpotlight />
+      <CampusLocations />
+      <LeadCapture />
+      <Footer />
+      <FloatingElements />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
