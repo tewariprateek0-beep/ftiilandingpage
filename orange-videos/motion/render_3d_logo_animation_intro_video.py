@@ -1,11 +1,11 @@
-"""Orange Videos 3D intro clip with a globe spin: 1920x1080, 30 fps, 10 s.
+"""Orange Videos 3D logo animation intro video (globe spin): 1920x1080, 30 fps, 10 s.
 
 Same as render_3d_animation_intro_clip.py, but before the zoom the sphere
 turns a full 360 degrees about its vertical axis: the play triangle (a
 raised decal on the sphere's surface) slides round the side, passes behind
 and returns to the front, the leaf turns with it, and the camera then dives
 into the triangle to full white.
-Usage: python3 render_3d_spin_intro_clip.py [output.mp4]
+Usage: python3 render_3d_logo_animation_intro_video.py [output.mp4]
 """
 import math
 import subprocess
@@ -143,7 +143,7 @@ def frame_bytes(i):
 
 
 def main():
-    out = sys.argv[1] if len(sys.argv) > 1 else "orange-videos-3d-spin-intro-clip.mp4"
+    out = sys.argv[1] if len(sys.argv) > 1 else "orange-videos-3d-logo-animation-intro-video.mp4"
     ff = subprocess.Popen(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
          "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "16",
