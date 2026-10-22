@@ -1,4 +1,4 @@
-"""Orange Videos logo reveal: 1920x1080, 30 fps, 10 s intro/outro.
+"""Orange Videos 2D animation intro clip (liquid logo reveal): 1920x1080, 30 fps, 10 s.
 
 Liquid drops drift in slowly and collect into the orange circle, the leaf
 sprouts, the white play triangle pops in, the mark holds, then a fast zoom
@@ -7,7 +7,7 @@ into the triangle takes the frame to full white.
 The logo geometry is measured from ../brand/orange-videos-logo.jpg (circle
 fitted, triangle rebuilt as a vector with rounded corners, leaf traced as a
 polar outline), so edges stay crisp even at 100x zoom.
-Usage: python3 render_logo_reveal.py [output.mp4]
+Usage: python3 render_2d_animation_intro_clip.py [output.mp4]
 """
 import math
 import os
@@ -382,7 +382,7 @@ def render_frame(t):
 
 
 def main():
-    out = sys.argv[1] if len(sys.argv) > 1 else "orange-videos-logo-reveal.mp4"
+    out = sys.argv[1] if len(sys.argv) > 1 else "orange-videos-2d-animation-intro-clip.mp4"
     ff = subprocess.Popen(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
          "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "16",
