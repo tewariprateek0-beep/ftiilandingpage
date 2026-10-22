@@ -310,6 +310,8 @@ def liquid_sdf(wx, wy, t):
         theta = np.arctan2(dy, dx)
         # surface wobble that settles into a perfect circle
         settle = math.exp(-max(0.0, t - T_SETTLE) * 3.6) * clamp(t - 1.0)
+        # fade the wobble out towards the centre, where theta is undefined
+        settle = settle * np.clip(rad / (0.5 * pool_r), 0, 1)
         wob = settle * (0.06 * np.sin(3 * theta + 5 * t) + 0.04 * np.sin(5 * theta - 6.5 * t)
                         + 0.025 * np.sin(8 * theta + 9 * t))
         dp = rad - pool_r * (1 + wob)
